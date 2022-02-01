@@ -1,7 +1,12 @@
 package ui
 
-import "github.com/rivo/tview"
+import (
+	"github.com/rivo/tview"
+)
 import "github.com/chonla/format"
+
+// Version string set in release time
+var Version string = ""
 
 var KEY_MAP = map[string]interface{}{
 	"filter":       string(FILTER_KEY),
@@ -9,11 +14,10 @@ var KEY_MAP = map[string]interface{}{
 	"follow":       string(FOLLOW_KEY),
 	"toggleFilter": string(TOGGLE_FILTER_KEY),
 	"help":         string(HELP_KEY),
+	"version":      Version,
 }
 
-// TODO: Add version
-
-var HELP_TEXT = format.Sprintf(`loggy
+var HELP_TEXT = format.Sprintf(`loggy %<version>s
 
 loggy is a swiss-knife for analyzing and reading logs. It parses the logs using a pattern that you define and allows you to filter the logs based on the parsed values.
 

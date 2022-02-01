@@ -33,10 +33,11 @@ var cfgFile string
 
 // cmd represents the entry command
 var cmd = &cobra.Command{
-	Use:   "loggy [path to log file]",
-	Short: "Swiss knife for logs",
-	Long:  `By default reads from STDIN or you can specify file path to read logs from`,
-	Args:  cobra.MaximumNArgs(1),
+	Use:     "loggy [path to log file]",
+	Short:   "Swiss knife for logs",
+	Long:    `By default reads from STDIN or you can specify file path to read logs from`,
+	Args:    cobra.MaximumNArgs(1),
+	Version: ui.Version,
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
 			inputStream io.Reader

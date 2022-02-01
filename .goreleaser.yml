@@ -1,0 +1,144 @@
+project_name: loggy
+
+release:
+  prerelease: auto
+
+builds:
+  - id: linux
+    binary: loggy
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/auhau/loggy/ui.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - arm
+    goarm:
+      - 7
+  - id: windows
+    binary: loggy
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/auhau/loggy/ui.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - 386
+  - id: darwin-amd64
+    binary: loggy
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/auhau/loggy/ui.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+  - id: darwin-arm64
+    binary: loggy
+    flags:
+      - -v
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/auhau/loggy.version={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - arm64
+
+snapshot:
+  name_template: "{{.Tag}}-snapshot"
+
+archives:
+  - id: scoop
+    builds:
+      - windows
+    name_template: "{{ tolower .ProjectName }}-{{ tolower .Os }}-{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    format: zip
+    wrap_in_directory: false
+    files:
+      - LICENSE
+      - README.md
+  - name_template: "{{ tolower .ProjectName }}-{{ tolower .Os }}-{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    format: binary
+    builds:
+      - linux
+      - windows
+      - darwin-amd64
+      - darwin-arm64
+  - id: homebrew-amd64
+    builds:
+      - darwin-amd64
+    name_template: "{{ tolower .ProjectName }}-{{ tolower .Os }}-{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    files:
+      - LICENSE
+      - README.md
+  - id: homebrew-arm64
+    builds:
+      - darwin-arm64
+    name_template: "{{ tolower .ProjectName }}-{{ tolower .Os }}-{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    files:
+      - LICENSE
+      - README.md
+
+nfpms:
+  - file_name_template: "{{ tolower .ProjectName }}_{{ tolower .Version }}_{{ tolower .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+    vendor: Adam Uhlir
+    homepage: https://github.com/auhau/loggy
+    maintainer: Adam Uhlir <adam@uhlir.dev>
+    description: Swiss knife for logs
+    license: MIT
+
+    formats:
+      - deb
+      - rpm
+
+scoop:
+  bucket:
+    owner: auhau
+    name: scoop
+
+  commit_author:
+    name: Adam Uhlir
+    email: adam@uhlir.dev
+  commit_msg_template: "build: scoop update for {{ .ProjectName }}@{{ .Tag }}"
+  homepage: "https://github.com/auhau/loggy"
+  description: "Swiss knife for logs."
+  license: MIT
+
+brews:
+  - name: loggy
+    tap:
+      owner: auhau
+      name: homebrew-loggy
+    ids:
+      - homebrew-amd64
+      - homebrew-arm64
+    commit_author:
+      name: Adam Uhlir
+      email: adam@uhlir.dev
+    homepage: https://github.com/auhau/loggy
+    description: Swiss knife for logs.
+    commit_msg_template: "build: brew formula update for {{ .ProjectName }}@{{ .Tag }}"
