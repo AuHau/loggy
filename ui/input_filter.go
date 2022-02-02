@@ -21,11 +21,14 @@ func handleFilterInput(key tcell.Key) {
 		if err != nil {
 			ShowError(err)
 
-			// There was an error with the new filter string
-			// lets try to use the old one to populate the screen.
-			// We gonna ignore any more errors though.
-			logsView.Clear()
-			store.Filter(filter)
+			// There was an error in filter string
+			// But redraw the screen only if filter is actually turned on
+			if isFilterOn {
+				logsView.Clear()
+				store.Filter(filter)
+			}
+
+			// Lets revert the filter to previous one
 			filterInput.SetText(filter)
 			layout.RemoveItem(filterInput)
 			return
