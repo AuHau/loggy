@@ -62,7 +62,8 @@ func Filter(filter string) error {
 		}
 	}
 
-	for element := buffer.Front(); element != nil; element = element.Next() {
+	// We walk the buffer from back to front
+	for element := buffer.Back(); element != nil; element = element.Prev() {
 		line := fmt.Sprintf("%s", element.Value)
 
 		result, err := isLineMatching(line)
