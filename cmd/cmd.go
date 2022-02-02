@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/auhau/loggy/store"
 	"github.com/auhau/loggy/ui"
-	"github.com/chonla/format"
 	"io"
 	"os"
 
@@ -25,7 +24,7 @@ const (
 	DEFAULT_BUFFER_SIZE = 10000
 )
 
-var LONG_DESCRIPTION = format.Sprintf(`By default loggy reads from STDIN or you can specify file path to read the logs from specific file.
+var LONG_DESCRIPTION = fmt.Sprintf(`By default loggy reads from STDIN or you can specify file path to read the logs from specific file.
 
 Configuration
 -------------
@@ -36,16 +35,7 @@ The order of precedence is: $HOME config > CWD config > --config config > Env. v
 
 Parsing pattern
 ---------------
-The logs are parsed using parsing pattern that you have to configure in order to use filters. The lines are tokenized using space character so you have to define section of the line. Internally regex is used for parsing, but the input pattern is escaped by default for special characters so you don't have to worry about that. You define parameters using syntax "<name:type>", where name is the name of parameter that you can refer to in filters and type is predefined type used to correctly find and parse the parameter.
-
-Supported types:
- - "string" defines string containing non-whitespace characters: [^\s]+
- - "integer" defines a integer: [0-9]+
- - "rest" collects the rest of the line: .*
-
-Example log and bellow its parsing pattern:
-[2022-09-11T15:04:22](authorization) DEBUG 200 We have received login information
-[<timestamp:string>](<component:string>) <level:string> <code:integer> <message:rest>
+%s
 
 Pattern names
 -------------
@@ -53,44 +43,16 @@ In your config file you can create a [patterns] section where you can predefine 
 
 Filter
 ------
-In order to use filter for the logs you have to define parsing pattern in which you define parameters that are extracted from the log lines. Then you can write filter expressions that will be applied on the logs. Filter has to return bool otherwise error will be shown.
-
-loggy uses internally "govaluate" which has very rich set ofC-like artithmetic/string expressions that you can use for your filters. Brief overview:
- - modifiers: + - / * & | ^ ** %% >> <<
- - comparators: > >= < <= == != =~ !~
- - logical ops: || &&
- - numeric constants, as 64-bit floating point (12345.678)
- - string constants (single quotes: 'foobar')
- - date constants (single quotes, using any permutation of RFC3339, ISO8601, ruby date, or unix date; date parsing is automatically tried with any string constant)
- - boolean constants: true false
- - parenthesis to control order of evaluation ( )
- - arrays (anything separated by , within parenthesis: (1, 2, 'foo'))
- - prefixes: ! - ~
- - ternary conditional: ? :
- - null coalescence: ??
-
-For more details see: https://github.com/Knetic/govaluate/blob/master/MANUAL.md
-
-Example of filter for the parsing pattern log above:
-level == "DEBUG" - display only debug messages
-code > 400 - display logs with code higher then 400
+%s
 
 Keyboard shortcuts
 ------------------
-Following keys are supported:
- - "%<filter>s" for setting filter
- - "%<toggleFilter>s" for toggling filter
- - "%<pattern>s" for setting parsing pattern input
- - "%<follow>s" for scroll to bottom and follow new data
- - "%<help>s" for displaying help
+%s
 
-Navigation:
- - "j", "k" or arrow keys for scrolling by one line 
- - "g", "G" to move to top / bottom
- - "Ctrl-F", "page down" to move down by one page
- - "Ctrl-B", "page up" to move up by one page
- - "Ctrl-C" to exit loggy
-`, ui.KEY_MAP)
+%s
+
+%s
+`, ui.HelpParsingPatternText, ui.HelpFilterText, ui.HelpHomeText, ui.HelpNavigationText, ui.HelpInputsText)
 
 var cfgFile string
 
