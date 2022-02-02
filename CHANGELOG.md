@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.1.2](https://www.github.com/AuHau/loggy/compare/v0.1.1...v0.1.2) (2022-02-02)
+
+
+### Bug Fixes
+
+* **store:** filter walking reversed ([#9](https://www.github.com/AuHau/loggy/issues/9)) ([e6c962c](https://www.github.com/AuHau/loggy/commit/e6c962c194f0fe2a9d8325d87092e7747c68eb7a))
+* **ui:** redraw logs on wrong filter only when filter is on ([#10](https://www.github.com/AuHau/loggy/issues/10)) ([32b114b](https://www.github.com/AuHau/loggy/commit/32b114b70fe2d343080b10ff62c0bf7c64a0ea78))
+
 ### [0.1.1](https://www.github.com/AuHau/loggy/compare/v0.1.0...v0.1.1) (2022-02-02)
 
 
