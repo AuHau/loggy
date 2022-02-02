@@ -174,7 +174,7 @@ func initConfig() {
 
 	// Get current directory config
 	viper.AddConfigPath(".")
-	cobra.CheckErr(viper.MergeInConfig())
+	_ = viper.MergeInConfig() // if no config is found we don't care
 
 	// Config file from the flag.
 	if cfgFile != "" {
