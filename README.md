@@ -82,8 +82,8 @@ Filter
 ------
 In order to use filter for the logs you have to define parsing pattern in which you define parameters that are extracted from the log lines. Then you can write filter expressions that will be applied on the logs. Filter has to return bool otherwise error will be shown.
 
-loggy uses internally "govaluate" which has very rich set ofC-like artithmetic/string expressions that you can use for your filters. Brief overview:
- - modifiers: + - / * & | ^ ** % >> <<
+loggy uses internally "govaluate" which has very rich set of C-like arithmetic/string expressions that you can use for your filters. Brief overview:
+ - modifiers: + - / * & | ^ ** %% >> <<
  - comparators: > >= < <= == != =~ !~
  - logical ops: || &&
  - numeric constants, as 64-bit floating point (12345.678)
@@ -104,19 +104,31 @@ code > 400 - display logs with code higher then 400
 
 Keyboard shortcuts
 ------------------
-Following keys are supported:
+General keys:
  - "/" for setting filter
  - "f" for toggling filter
  - "p" for setting parsing pattern input
  - "b" for scroll to bottom and follow new data
  - "h" for displaying help
 
-Navigation:
+Logs navigation:
  - "j", "k" or arrow keys for scrolling by one line 
  - "g", "G" to move to top / bottom
  - "Ctrl-F", "page down" to move down by one page
  - "Ctrl-B", "page up" to move up by one page
- - "Ctrl-C" to exit loggy
+
+Input fields:
+ - Left arrow: Move left by one character.
+ - Right arrow: Move right by one character.
+ - Home, Ctrl-A, Alt-a: Move to the beginning of the line.
+ - End, Ctrl-E, Alt-e: Move to the end of the line.
+ - Alt-left, Alt-b: Move left by one word.
+ - Alt-right, Alt-f: Move right by one word.
+ - Backspace: Delete the character before the cursor.
+ - Delete: Delete the character after the cursor.
+ - Ctrl-K: Delete from the cursor to the end of the line.
+ - Ctrl-W: Delete the last word before the cursor.
+ - Ctrl-U: Delete the entire line.
 
 Usage:
   loggy [path to log file] [flags]
