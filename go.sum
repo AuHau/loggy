@@ -65,10 +65,10 @@ github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmV
 github.com/armon/go-metrics v0.3.10/go.mod h1:4O98XIr/9W0sxpJ8UaYkvjk10Iff7SnFrb4QAOwNTFc=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/auhau/allot v0.0.0-20220131090614-4ccbf19ce41a h1:EFLRpVhX635sfrZf7F2KiK+b9ex/JOqExYLxZBddsvM=
-github.com/auhau/allot v0.0.0-20220131090614-4ccbf19ce41a/go.mod h1:vLMposaxHaE1cRlYEpeeAghi4YAOTLD0/OdjWlQ2jUE=
 github.com/auhau/allot v0.0.0-20220131141522-754325320dd5 h1:AydCuIrdPf1GYOXmkqRcATghoDYRstxQioqBtuodjvU=
 github.com/auhau/allot v0.0.0-20220131141522-754325320dd5/go.mod h1:vLMposaxHaE1cRlYEpeeAghi4YAOTLD0/OdjWlQ2jUE=
+github.com/auhau/gredux v0.0.0-20220204125146-c2f415ee87de h1:yhX1m+7TcrgydktpcprO+UYl74XEU6mHIKC9n8Nb8VI=
+github.com/auhau/gredux v0.0.0-20220204125146-c2f415ee87de/go.mod h1:+eShUzW7/Znc0ZiBR8F38wAZWH53TIn/m20CTdUmbh8=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=

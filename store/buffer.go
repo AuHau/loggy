@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
+	"github.com/auhau/gredux"
+	"github.com/auhau/loggy/state/actions"
+	"github.com/rivo/tview"
 	"io"
 	"os"
 	"sync"
@@ -11,58 +14,43 @@ import (
 
 var (
 	buffer = list.New()
-	writer io.Writer
 	mu     sync.Mutex
 )
 
-// StartBuffering takes io.Reader and reads its content storing it to internal buffer
+// StartBuffering takes io.Reader, reads its content and stores it to internal buffer
 // It allows only `maxBufferSize` elements in the buffer. It drops the logs in FIFO manner.
-func StartBuffering(inputReader io.Reader, uiWriter io.Writer, maxBufferSize int) {
-	writer = uiWriter
+func StartBuffering(inputReader io.Reader, app *tview.Application, stateStore *gredux.Store, maxBufferSize int) {
 	scanner := bufio.NewScanner(inputReader)
 
-	// We prepend NL character before the logs lines and we don't want to have first empty line.
-	firstLine := true
-
 	for scanner.Scan() {
-		if buffer.Len() >= maxBufferSize {
-			buffer.Remove(buffer.Back())
-		}
-
 		line := scanner.Text()
-		writeLine(line, firstLine)
-		firstLine = false
+		processLine(line, app, stateStore, maxBufferSize)
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		_, err = fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		if err != nil {
+			panic(err) // If we can't print errors to STDERR we gonna panic
+		}
 	}
 }
 
-// writeLine handles syncing with UI goroutine.
-// It stores the line to internal buffer and writes it to UI if it matches current filter.
-func writeLine(line string, firstLine bool) {
+// processLine handles syncing and messaging with UI goroutine.
+// It stores the line to internal buffer and sent out DropLogLine and AddLogLine actions accordingly.
+func processLine(line string, app *tview.Application, stateStore *gredux.Store, maxBufferSize int) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	if buffer.Len() >= maxBufferSize {
+		buffer.Remove(buffer.Back())
+		app.QueueUpdateDraw(func() {
+			stateStore.Dispatch(actions.DropLogLine(fmt.Sprint(buffer.Back().Value)))
+		})
+	}
+
 	buffer.PushFront(line)
 
-	result, err := isLineMatching(line)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error filtering line:", err)
-		return
-	}
-
-	if result {
-
-		if firstLine {
-			_, err = fmt.Fprint(writer, line)
-			firstLine = false
-		} else {
-			_, err = fmt.Fprint(writer, "\n"+line)
-		}
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "error writing to ui:", err)
-		}
-	}
+	app.QueueUpdateDraw(func() {
+		stateStore.Dispatch(actions.AddLogLine(line))
+	})
 }

@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/auhau/allot"
+	"github.com/auhau/gredux"
+	"github.com/auhau/loggy/state"
 	"github.com/auhau/loggy/store"
 	"github.com/auhau/loggy/ui"
 	"io"
@@ -17,6 +20,8 @@ const (
 	BUFFER_SIZE_NAME        = "buffer-size"
 	PARSE_PATTERN_NAME      = "pattern"
 	PARSE_PATTERN_NAME_NAME = "pattern-name"
+	SHOW_NON_PATTERN_LINES  = "non-pattern-lines"
+	FOLLOW_NAME             = "follow"
 )
 
 // Default values
@@ -70,32 +75,60 @@ var cmd = &cobra.Command{
 	Version: ui.Version,
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
+			inputName   string
 			inputStream io.Reader
 			err         error
 		)
 
-		bufferSize := viper.GetInt(BUFFER_SIZE_NAME)
-		patter := viper.GetString(PARSE_PATTERN_NAME)
+		pattern := viper.GetString(PARSE_PATTERN_NAME)
 		patterName := viper.GetString(PARSE_PATTERN_NAME_NAME)
 
 		if patterName != "" {
-			patter, err = resolvePatterName(patterName)
+			pattern, err = resolvePatterName(patterName)
 			cobra.CheckErr(err)
 		}
 
+		bufferSize := viper.GetInt(BUFFER_SIZE_NAME)
+
 		if len(args) == 1 {
+			info, err := os.Stat(args[0])
+			cobra.CheckErr(err)
+
+			if info.IsDir() {
+				cmd.PrintErr("passed path is a directory")
+				os.Exit(1)
+			}
+
 			file, err := os.Open(args[0])
 			cobra.CheckErr(err)
 
 			inputStream = file
+			inputName = info.Name()
 		} else {
 			inputStream = os.Stdin
+			inputName = "STDIN"
 		}
 
-		uiApp, uiWriter, err := ui.Bootstrap(bufferSize, patter)
+		parsingPatternInstance, err := allot.NewWithEscaping(pattern, store.Types)
 		cobra.CheckErr(err)
 
-		go store.StartBuffering(inputStream, uiWriter, bufferSize)
+		initialState := state.State{
+			IsFollowing:            viper.GetBool(FOLLOW_NAME),
+			IsFilterOn:             false,
+			FilterString:           "",
+			ParsingPatternString:   pattern,
+			ParsingPattern:         parsingPatternInstance,
+			DisplayNonPatternLines: viper.GetBool(SHOW_NON_PATTERN_LINES),
+			InputName:              inputName,
+			IsLogsFirstLine:        true,
+		}
+
+		stateStore := gredux.New(initialState)
+
+		uiApp, err := ui.Bootstrap(stateStore, bufferSize)
+		cobra.CheckErr(err)
+
+		go store.StartBuffering(inputStream, uiApp, stateStore, bufferSize)
 
 		err = uiApp.Run()
 		cobra.CheckErr(err)
@@ -121,6 +154,8 @@ func init() {
 	cmd.Flags().IntP(BUFFER_SIZE_NAME, "b", DEFAULT_BUFFER_SIZE, "number of lines that will be buffered")
 	cmd.Flags().StringP(PARSE_PATTERN_NAME, "p", "", "parsing pattern see above for details")
 	cmd.Flags().StringP(PARSE_PATTERN_NAME_NAME, "n", "", "use predefined pattern in config")
+	cmd.Flags().BoolP(FOLLOW_NAME, "f", false, "turn on following mode which always show latest logs")
+	cmd.Flags().BoolP(SHOW_NON_PATTERN_LINES, "a", true, "display lines that do not match parsing pattern")
 }
 
 // initConfig reads in config file and ENV variables if set.

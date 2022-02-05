@@ -8,7 +8,7 @@ all: build vet test binary
 binary: CGO_ENABLED=0
 binary: dist FORCE
 	$(GO) version
-	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/loggy .
+	$(GO) build -race -trimpath -ldflags "$(LDFLAGS)" -o dist/loggy .
 
 dist:
 	mkdir $@
@@ -24,7 +24,7 @@ test:
 .PHONY: build
 build: CGO_ENABLED=0
 build:
-	$(GO) build -trimpath -ldflags "$(LDFLAGS)" ./...
+	$(GO) build -race -trimpath -ldflags "$(LDFLAGS)" ./...
 
 .PHONY: clean
 clean:

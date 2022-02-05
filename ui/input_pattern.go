@@ -1,51 +1,83 @@
 package ui
 
 import (
+	"errors"
+	"fmt"
+	"github.com/auhau/allot"
+	"github.com/auhau/gredux"
+	"github.com/auhau/loggy/state"
+	"github.com/auhau/loggy/state/actions"
 	"github.com/auhau/loggy/store"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-func handlePatternInput(key tcell.Key) {
-	if key == tcell.KeyEsc {
-		// User canceled entering the pattern string
-		// lets revert the filter to original string.
-		patternInput.SetText(pattern)
-	} else {
-		err := store.SetParsePattern(patternInput.GetText())
-
-		if err != nil {
-			ShowError(err)
-
-			// There was an error with the new parsing pattern string
-			// lets try to use the old one to populate the screen.
-			// We gonna ignore any more errors though.
-			store.SetParsePattern(pattern)
-			patternInput.SetText(pattern)
-			layout.RemoveItem(patternInput)
-			return
+// makeParsingPattern is a main entry point for UI to set a new parsing pattern
+func makeParsingPattern(pattern string) (parsingPatternInstance allot.Command, err error) {
+	// There might be "so invalid syntax" that regex starts panicking
+	// and not returning error, so we catch everything here just to be sure.
+	defer func() {
+		receivedErr := recover()
+		if receivedErr != nil {
+			err = errors.New("invalid syntax of parsing pattern")
 		}
+	}()
 
-		pattern = patternInput.GetText()
-
-		// Lets apply the filter to the new parsing pattern
-		handleFilterInput(tcell.KeyEnter)
-	}
-
-	layout.RemoveItem(patternInput)
-	app.SetFocus(logsView)
-}
-
-func makePatternInput(bootstrappingPattern string) *tview.InputField {
-	pattern = bootstrappingPattern
-	err := store.SetParsePattern(bootstrappingPattern)
+	parsingPatternInstance, err = allot.NewWithEscaping(pattern, store.Types)
 
 	if err != nil {
-		ShowError(err)
+		return parsingPatternInstance, fmt.Errorf("invalid syntax of parsing pattern: %s", err)
 	}
 
-	return tview.NewInputField().
-		SetText(bootstrappingPattern).
-		SetLabel("Parsing pattern: ").
-		SetDoneFunc(handlePatternInput)
+	return parsingPatternInstance, nil
+}
+
+func patternInputReducer(s gredux.State, action gredux.Action) gredux.State {
+	st := s.(state.State)
+
+	switch action.ID {
+	case actions.ActionNameDisplayPatternInput:
+		st.DisplayPatternInput = true
+		return st
+	case actions.ActionNameSetPattern:
+		pattern, err := makeParsingPattern(action.Data.(string))
+		if err != nil {
+			st.DisplayError = true
+			st.ErrorMessage = fmt.Sprint(err)
+			return st
+		}
+
+		st.ParsingPattern = pattern
+		st.ParsingPatternString = action.Data.(string)
+		st.DisplayPatternInput = false
+		return st
+	case actions.ActionNameToggleNonPatternLines:
+		st.DisplayNonPatternLines = !st.DisplayNonPatternLines
+		return st
+	}
+
+	return st
+}
+
+func makePatternInput(stateStore *gredux.Store) *tview.InputField {
+	initPattern := stateStore.State().(state.State).ParsingPatternString
+	input := tview.NewInputField().
+		SetText(initPattern).
+		SetLabel("Parsing pattern: ")
+
+	var handlePatternInput = func(key tcell.Key) {
+		if key == tcell.KeyEsc {
+			// User canceled entering the filter string
+			// lets revert the filter to original string.
+			currentPattern := stateStore.State().(state.State).ParsingPatternString
+			input.SetText(currentPattern)
+		} else {
+			stateStore.Dispatch(actions.SetPattern(input.GetText()))
+		}
+	}
+
+	input.SetDoneFunc(handlePatternInput)
+	stateStore.AddReducer(patternInputReducer)
+
+	return input
 }
