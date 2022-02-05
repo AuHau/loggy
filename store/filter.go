@@ -6,94 +6,62 @@ import (
 	"github.com/Knetic/govaluate"
 	"github.com/auhau/allot"
 	"reflect"
+	"strings"
 )
-
-// parsePattern is current parsing pattern used on every log line
-var parsePattern allot.Command
-
-// filterExpression is compiled expression that is used to filter out the logs
-var filterExpression *govaluate.EvaluableExpression
-
-// types are pattern's types usable in declaring parameter's type and its regex shape
-// TODO: Allow custom types in config
-var types = map[string]string{
-	"string":  "[^\\s]+",
-	"integer": "[0-9]+",
-	"rest":    ".*",
-}
-
-// TODO: Option to define if non-matching lines should be printed or not.
-
-// SetParsePattern is a main entry point for UI to set a new parsing pattern
-func SetParsePattern(pattern string) (err error) {
-	// There might be "so invalid syntax" that regex starts panicking
-	// and not returning error, so we catch everything here just to be sure.
-	defer func() {
-		receivedErr := recover()
-		if receivedErr != nil {
-			err = errors.New("invalid syntax of parsing pattern")
-		}
-	}()
-
-	parsePattern, err = allot.NewWithEscaping(pattern, types)
-
-	if err != nil {
-		return fmt.Errorf("invalid syntax of parsing pattern: %s", err)
-	}
-
-	return nil
-}
 
 // Filter goes through buffer and writes out logs that match
 // It assumes that display was cleared out
-func Filter(filter string) error {
+func Filter(filter *govaluate.EvaluableExpression, pattern allot.Command, displayNonPatternLines bool) (totalLines, matchingLines, nonPatternLines int, logs string, err error) {
 	mu.Lock()
 	defer mu.Unlock()
-	var err error
+	builder := strings.Builder{}
 	firstLine := true
-
-	// Empty string means no filtering
-	if filter == "" {
-		filterExpression = nil
-	} else {
-		filterExpression, err = govaluate.NewEvaluableExpression(filter)
-		if err != nil {
-			return err
-		}
-	}
 
 	// We walk the buffer from back to front
 	for element := buffer.Back(); element != nil; element = element.Prev() {
 		line := fmt.Sprintf("%s", element.Value)
+		totalLines += 1
 
-		result, err := isLineMatching(line)
+		result, err := IsLineMatching(line, filter, pattern)
 		if err != nil {
-			return err
+			return 0, 0, 0, "", err
 		}
 
-		if result {
-			// We don't want empty line in beginning nor end
-			if firstLine {
-				_, err = fmt.Fprint(writer, line)
-				firstLine = false
+		switch result {
+		case MATCH:
+			if !firstLine {
+				line = "\n" + line
 			} else {
-				_, err = fmt.Fprint(writer, "\n"+line)
+				firstLine = false
 			}
 
-			if err != nil {
-				return err
+			builder.WriteString(line)
+			matchingLines += 1
+		case PARSE_PATTERN_NO_MATCH:
+			nonPatternLines += 1
+
+			if displayNonPatternLines {
+				if !firstLine {
+					line = "\n" + line
+				} else {
+					firstLine = false
+				}
+
+				builder.WriteString(line)
 			}
+		case FILTER_NO_MATCH:
+			// NO OP
 		}
 	}
 
-	return nil
+	return totalLines, matchingLines, nonPatternLines, builder.String(), nil
 }
 
 // buildParameters parses the logs line using parsing pattern,
 // extracts specified parameters and parse them into type if needed.
-func buildParameters(match allot.MatchInterface) (map[string]interface{}, error) {
+func buildParameters(match allot.MatchInterface, pattern allot.Command) (map[string]interface{}, error) {
 	parameters := make(map[string]interface{}, 10)
-	patternParams := parsePattern.Parameters()
+	patternParams := pattern.Parameters()
 
 	for _, parameter := range patternParams {
 		switch parameter.Data() {
@@ -119,32 +87,44 @@ func buildParameters(match allot.MatchInterface) (map[string]interface{}, error)
 	return parameters, nil
 }
 
-func isLineMatching(line string) (bool, error) {
+const (
+	MATCH = iota
+	PARSE_PATTERN_NO_MATCH
+	FILTER_NO_MATCH
+)
+
+// IsLineMatching check if for given filter and pattern the line matches.
+// It returns enum values MATCH, PARSE_PATTERN_NO_MATCH or FILTER_NO_MATCH according it matching result
+func IsLineMatching(line string, filter *govaluate.EvaluableExpression, pattern allot.Command) (int, error) {
 	// if no filter is configured that for sure it is matching
-	if filterExpression == nil {
-		return true, nil
+	if filter == nil {
+		return MATCH, nil
 	}
 
-	match, err := parsePattern.Match(line)
+	match, err := pattern.Match(line)
 
-	// error is returned if the line does not match so we return only false
+	// error is returned if the line does not match but that is not an error but valid state
 	if err != nil {
-		return false, nil
+		return PARSE_PATTERN_NO_MATCH, nil
 	}
 
-	parameters, err := buildParameters(match)
+	parameters, err := buildParameters(match, pattern)
 	if err != nil {
-		return false, err
+		return -1, err
 	}
 
-	result, err := filterExpression.Evaluate(parameters)
+	result, err := filter.Evaluate(parameters)
 	if err != nil {
-		return false, err
+		return -1, err
 	}
 
 	if reflect.TypeOf(result).String() != "bool" {
-		return false, errors.New("filter expression did not return boolean")
+		return -1, errors.New("filter expression did not return boolean")
 	}
 
-	return result.(bool), nil
+	if result.(bool) {
+		return MATCH, nil
+	}
+
+	return FILTER_NO_MATCH, nil
 }

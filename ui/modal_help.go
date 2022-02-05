@@ -2,6 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"github.com/auhau/gredux"
+	"github.com/auhau/loggy/state"
+	"github.com/auhau/loggy/state/actions"
 	"github.com/rivo/tview"
 )
 import "github.com/chonla/format"
@@ -10,9 +13,8 @@ import "github.com/chonla/format"
 var Version string = ""
 
 var KEY_MAP = map[string]interface{}{
-	"filter":       string(FILTER_KEY),
-	"pattern":      string(PATTERN_KEY),
-	"follow":       string(FOLLOW_KEY),
+	"filter":       string(SET_FILTER_KEY),
+	"pattern":      string(SET_PATTERN_KEY),
 	"toggleFilter": string(TOGGLE_FILTER_KEY),
 	"help":         string(HELP_KEY),
 	"version":      Version,
@@ -22,12 +24,12 @@ var HelpHomeText = format.Sprintf(`General keys:
  - "%<filter>s" for setting filter
  - "%<toggleFilter>s" for toggling filter
  - "%<pattern>s" for setting parsing pattern input
- - "%<follow>s" for scroll to bottom and follow new data
  - "%<help>s" for displaying help`, KEY_MAP)
 
 var HelpNavigationText = `Logs navigation:
  - "j", "k" or arrow keys for scrolling by one line 
- - "g", "G" to move to top / bottom
+ - "g" to move to top
+ - "G" to move to bottom and follow bottom
  - "Ctrl-F", "page down" to move down by one page
  - "Ctrl-B", "page up" to move up by one page`
 
@@ -77,7 +79,22 @@ Example of filter for the parsing pattern log above:
 level == "DEBUG" - display only debug messages
 code > 400 - display logs with code higher then 400`
 
-func makeHelpModal() *tview.Modal {
+func helpModalReducer(s gredux.State, action gredux.Action) gredux.State {
+	st := s.(state.State)
+
+	switch action.ID {
+	case actions.ActionNameDisplayHelp:
+		st.DisplayHelp = true
+		return st
+	case actions.ActionNameHideHelp:
+		st.DisplayHelp = false
+		return st
+	}
+
+	return st
+}
+
+func makeHelpModal(stateStore *gredux.Store) *tview.Modal {
 	helpPages := map[string]string{
 		"General":         HelpHomeText,
 		"Navigation":      HelpNavigationText,
@@ -85,25 +102,30 @@ func makeHelpModal() *tview.Modal {
 		"Parsing pattern": HelpParsingPatternText,
 		"Filter inputs":   HelpFilterText,
 	}
-	pagesButton := []string{"Close", "General", "Navigation", "Inputs", "Parsing pattern", "Filter inputs"}
+	pagesButton := []string{"General", "Navigation", "Inputs", "Parsing pattern", "Filter inputs"}
 
 	modal := tview.NewModal()
 	modal.
 		SetText(fmt.Sprintf(`loggy %s
 
-%s`, Version, HelpHomeText)).
+%s
+
+<< press ESC to close >>`, Version, HelpHomeText)).
 		AddButtons(pagesButton).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			// Empty buttonLabel means ESC key pressed
 			if buttonLabel == "Close" || buttonLabel == "" {
-				pages.HidePage(HELP_PAGE_NAME)
-				app.SetFocus(logsView)
+				stateStore.Dispatch(actions.HideHelp())
 			} else {
 				modal.SetText(fmt.Sprintf(`loggy %s
 
-%s`, Version, helpPages[buttonLabel]))
+%s
+
+<<press ESC to close>>`, Version, helpPages[buttonLabel]))
 			}
 		})
+
+	stateStore.AddReducer(helpModalReducer)
 
 	return modal
 }

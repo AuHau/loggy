@@ -1,20 +1,19 @@
 package ui
 
 import (
-	"errors"
-	"github.com/auhau/loggy/store"
-	"github.com/gdamore/tcell/v2"
+	"github.com/auhau/gredux"
+	"github.com/auhau/loggy/state"
+	"github.com/auhau/loggy/state/actions"
 	"github.com/rivo/tview"
-	"io"
 )
 
 // Key bindings
 const (
-	FILTER_KEY        = '/'
-	TOGGLE_FILTER_KEY = 'f'
-	PATTERN_KEY       = 'p'
-	FOLLOW_KEY        = 'b'
-	HELP_KEY          = 'h'
+	SET_FILTER_KEY               = '/'
+	TOGGLE_FILTER_KEY            = 'f'
+	TOGGLE_NON_PATTERN_LINES_KEY = 'a'
+	SET_PATTERN_KEY              = 'p'
+	HELP_KEY                     = 'h'
 )
 
 // Pages names
@@ -24,97 +23,92 @@ const (
 	ERROR_PAGE_NAME = "errorModal"
 )
 
-// UI components
-var (
-	app          *tview.Application
-	layout       *tview.Flex
-	logsView     *tview.TextView
-	errorModal   *tview.Modal
-	filterInput  *tview.InputField
-	patternInput *tview.InputField
-	helpModal    *tview.Modal
-	pages        *tview.Pages
-)
-
-// State
-var (
-	pattern    string
-	filter     string
-	isFilterOn bool
-)
-
 // TODO: Status bar that
-//  - displays when new data are present but you are not following
-//  - displays when you are detached
 //  - displays number of (filtered) lines
-//  - displays file name / stdin
 //  - displays if filter is applied / set or not
-// 	- display number of lines that did and did not match the parsing pattern
+// 	- display number of lines that did not match the parsing pattern
 
 // TODO: Coloring based on type of log (error | warning | debug | info)
 // TODO: Follow should not be default (maybe only for STDIN?)
-
-// handleLogsViewInput is main handler for key inputs as it serves the LogsView
-// That is the reason why it is placed here and not in `view_logs.go` file.
-func handleLogsViewInput(event *tcell.EventKey) *tcell.EventKey {
-	switch event.Rune() {
-	case TOGGLE_FILTER_KEY:
-		logsView.Clear()
-
-		var err error
-		if isFilterOn {
-			err = store.Filter("")
-			isFilterOn = false
-		} else {
-			err = store.Filter(filter)
-			isFilterOn = true
-		}
-
-		if err != nil {
-			ShowError(err)
-		}
-	case FILTER_KEY:
-		layout.AddItem(filterInput, 1, 1, true)
-		app.SetFocus(filterInput)
-	case PATTERN_KEY:
-		layout.AddItem(patternInput, 1, 1, true)
-		app.SetFocus(patternInput)
-	case FOLLOW_KEY:
-		logsView.ScrollToEnd()
-	case HELP_KEY:
-		pages.ShowPage(HELP_PAGE_NAME)
-		app.SetFocus(helpModal)
-	}
-
-	return event
-}
+// TODO: List of pre-configured patterns available
 
 // Bootstrap setup the tview App and bootstraps all its components
 // It returns also io.Writer that is used to pass logs into the LogsView
-func Bootstrap(bufferSize int, pattern string) (*tview.Application, io.Writer, error) {
-	if app != nil {
-		return nil, nil, errors.New("application initialized")
-	}
+func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, error) {
+	app := tview.NewApplication()
 
-	app = tview.NewApplication()
+	logsView := makeLogsView(bufferSize, stateStore)
+	//statusBar := makeStatusBar(stateStore)
+	helpModal := makeHelpModal(stateStore)
+	errorModal := makeErrorModal(stateStore)
+	filterInput := makeFilterInput(stateStore)
+	patternInput := makePatternInput(stateStore)
 
-	logsView = makeLogsView(bufferSize)
-	errorModal = makeErrorModal()
-	helpModal = makeHelpModal()
-	filterInput = makeFilterInput()
-	patternInput = makePatternInput(pattern)
-
-	layout = tview.NewFlex().
+	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(logsView, 0, 1, true)
+		//AddItem(statusBar, 1, 0, false).
+		AddItem(logsView, 0, 10, true)
 
-	pages = tview.NewPages().
+	pages := tview.NewPages().
 		AddPage(MAIN_PAGE_NAME, layout, true, true).
 		AddPage(HELP_PAGE_NAME, helpModal, true, false).
 		AddPage(ERROR_PAGE_NAME, errorModal, true, false)
 
+	stateStore.AddHook(func(s gredux.State) {
+		st := s.(state.State)
+		var focusPrimitive tview.Primitive = logsView
+
+		if st.DisplayError {
+			pages.ShowPage(ERROR_PAGE_NAME)
+			focusPrimitive = errorModal
+		} else {
+			pages.HidePage(ERROR_PAGE_NAME)
+		}
+
+		if st.DisplayHelp {
+			pages.ShowPage(HELP_PAGE_NAME)
+			focusPrimitive = helpModal
+		} else {
+			pages.HidePage(HELP_PAGE_NAME)
+		}
+
+		if st.DisplayFilterInput {
+			layout.AddItem(filterInput, 1, 0, true)
+			focusPrimitive = filterInput
+		} else {
+			layout.RemoveItem(filterInput)
+		}
+
+		if st.DisplayPatternInput {
+			layout.AddItem(patternInput, 1, 0, true)
+			focusPrimitive = patternInput
+		} else {
+			layout.RemoveItem(patternInput)
+		}
+
+		app.SetFocus(focusPrimitive)
+	}, []string{
+		actions.ActionNameHideError,
+		actions.ActionNameAddLogLine,  // Can display errors
+		actions.ActionNameDropLogLine, // Can display errors
+		actions.ActionNameDisplayHelp,
+		actions.ActionNameHideHelp,
+		actions.ActionNameDisplayFilterInput,
+		actions.ActionNameHideFilterInput,
+		actions.ActionNameFilter, // Can display errors
+		actions.ActionNameDisplayPatternInput,
+		actions.ActionNameSetPattern,   // Can display errors
+		actions.ActionNameToggleFilter, // Can display errors
+	})
+
+	stateStore.AfterUpdate(func(s gredux.State) {
+		// The components should have set their state correctly using Hooks
+		// now lets render the app
+		//app.QueueUpdateDraw(func() {})
+	})
+
 	app.SetRoot(pages, true)
 	app.SetFocus(logsView)
 
-	return app, tview.ANSIWriter(logsView), nil
+	return app, nil
 }
