@@ -26,6 +26,24 @@ func filterInputReducer(s gredux.State, action gredux.Action) gredux.State {
 		st.DisplayFilterInput = false
 		return st
 
+	case actions.ActionNameToggleNonPatternLines:
+		// No filter is set, so we don't have to bother with changing anything
+		if st.FilterString == "" {
+			return st
+		}
+
+		_, _, _, logs, err := store.Filter(st.FilterExpression, st.ParsingPattern, st.DisplayNonPatternLines)
+
+		if err != nil {
+			st.DisplayError = true
+			st.ErrorMessage = fmt.Sprint(err)
+			return st
+		}
+
+		st.DisplayNonPatternLines = !st.DisplayNonPatternLines
+		st.Logs = logs
+		return st
+
 	case actions.ActionNameFilter:
 		filterExpression, err := govaluate.NewEvaluableExpression(action.Data.(string))
 		if err != nil {

@@ -31,7 +31,8 @@ var HelpNavigationText = `Logs navigation:
  - "g" to move to top
  - "G" to move to bottom and follow bottom
  - "Ctrl-F", "page down" to move down by one page
- - "Ctrl-B", "page up" to move up by one page`
+ - "Ctrl-B", "page up" to move up by one page
+ - Mouse scrolling also scrolls the view accordingly`
 
 var HelpInputsText = `Input fields:
  - Left arrow: Move left by one character.

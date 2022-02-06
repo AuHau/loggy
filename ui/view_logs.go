@@ -14,6 +14,12 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 	st := s.(state.State)
 
 	switch action.ID {
+	case actions.ActionNameTurnOnFollowing:
+		st.IsFollowing = true
+		return st
+	case actions.ActionNameTurnOffFollowing:
+		st.IsFollowing = false
+		return st
 	case actions.ActionNameAddLogLine:
 		line := action.Data.(string)
 		var lineWithNL string
@@ -25,15 +31,14 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 			lineWithNL += "\n" + line
 		}
 
-		// We gonna check if the line matches filter only there is some filter set
-		if st.FilterString != "" {
-			result, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
-			if err != nil {
-				st.DisplayError = true
-				st.ErrorMessage = fmt.Sprint(err)
-				return st
-			}
+		result, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
+		if err != nil {
+			st.DisplayError = true
+			st.ErrorMessage = fmt.Sprint(err)
+			return st
+		}
 
+		if st.FilterString != "" {
 			if result == store.MATCH {
 				st.TotalLines += 1
 				st.MatchingLines += 1
@@ -50,6 +55,11 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 		} else {
 			st.TotalLines += 1
 			st.MatchingLines += 1
+
+			if result == store.PARSE_PATTERN_NO_MATCH {
+				st.NonPatternLines += 1
+			}
+
 			st.Logs += lineWithNL
 		}
 		return st
@@ -67,7 +77,6 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 			if result == store.MATCH {
 				st.TotalLines -= 1
 				st.MatchingLines -= 1
-				//st.Logs += "\n" + line
 			} else if result == store.FILTER_NO_MATCH {
 				st.TotalLines -= 1
 			} else if result == store.PARSE_PATTERN_NO_MATCH {
@@ -77,7 +86,6 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 		} else {
 			st.TotalLines -= 1
 			st.MatchingLines -= 1
-			//st.Logs += "\n" + line
 		}
 		return st
 	}
@@ -85,9 +93,12 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 	return st
 }
 
+// TODO: Add indicator that there is a new log line that was not yet seen by the user
 func makeLogsView(bufferSize int, stateStore *gredux.Store) *tview.TextView {
 	view := tview.NewTextView().
 		SetMaxLines(bufferSize).
+		SetWrap(true).
+		SetWordWrap(true).
 		SetDynamicColors(true)
 
 	isFollowing := stateStore.State().(state.State).IsFollowing

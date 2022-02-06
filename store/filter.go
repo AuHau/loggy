@@ -96,16 +96,16 @@ const (
 // IsLineMatching check if for given filter and pattern the line matches.
 // It returns enum values MATCH, PARSE_PATTERN_NO_MATCH or FILTER_NO_MATCH according it matching result
 func IsLineMatching(line string, filter *govaluate.EvaluableExpression, pattern allot.Command) (int, error) {
-	// if no filter is configured that for sure it is matching
-	if filter == nil {
-		return MATCH, nil
-	}
-
 	match, err := pattern.Match(line)
 
 	// error is returned if the line does not match but that is not an error but valid state
 	if err != nil {
 		return PARSE_PATTERN_NO_MATCH, nil
+	}
+
+	// if no filter is configured that for sure it is matching
+	if filter == nil {
+		return MATCH, nil
 	}
 
 	parameters, err := buildParameters(match, pattern)

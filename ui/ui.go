@@ -4,6 +4,7 @@ import (
 	"github.com/auhau/gredux"
 	"github.com/auhau/loggy/state"
 	"github.com/auhau/loggy/state/actions"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -23,14 +24,28 @@ const (
 	ERROR_PAGE_NAME = "errorModal"
 )
 
-// TODO: Status bar that
-//  - displays number of (filtered) lines
-//  - displays if filter is applied / set or not
-// 	- display number of lines that did not match the parsing pattern
+// Color theme
+const (
+	STATUS_BAR_BACKGROUND_COLOR = tcell.ColorGray
+
+	NON_PATTERN_LINES_STATUS_BACKGROUND_COLOR = tcell.ColorDarkRed
+	NON_PATTERN_LINES_STATUS_TEXT_COLOR       = tcell.ColorLightGray
+
+	FILTER_STATUS_NONACTIVE_BACKGROUND_COLOR = tcell.ColorGray
+	FILTER_STATUS_ACTIVE_BACKGROUND_COLOR    = tcell.ColorLimeGreen
+	FILTER_STATUS_TEXT_COLOR                 = tcell.ColorLightGray
+
+	INPUT_NAME_BACKGROUND_COLOR = tcell.ColorDarkSlateGray
+	INPUT_NAME_TEXT_COLOR       = tcell.ColorLightGray
+
+	FOLLOWING_STATUS_TEXT_COLOR                 = tcell.ColorLightGray
+	FOLLOWING_STATUS_ACTIVE_BACKGROUND_COLOR    = tcell.ColorNavy
+	FOLLOWING_STATUS_NONACTIVE_BACKGROUND_COLOR = tcell.ColorGray
+)
 
 // TODO: Coloring based on type of log (error | warning | debug | info)
 // TODO: Follow should not be default (maybe only for STDIN?)
-// TODO: List of pre-configured patterns available
+// TODO: List of pre-configured patterns available in the UI
 
 // Bootstrap setup the tview App and bootstraps all its components
 // It returns also io.Writer that is used to pass logs into the LogsView
@@ -38,7 +53,7 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 	app := tview.NewApplication()
 
 	logsView := makeLogsView(bufferSize, stateStore)
-	//statusBar := makeStatusBar(stateStore)
+	statusBar := makeStatusBar(stateStore)
 	helpModal := makeHelpModal(stateStore)
 	errorModal := makeErrorModal(stateStore)
 	filterInput := makeFilterInput(stateStore)
@@ -46,7 +61,7 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		//AddItem(statusBar, 1, 0, false).
+		AddItem(statusBar, 1, 0, false).
 		AddItem(logsView, 0, 10, true)
 
 	pages := tview.NewPages().
@@ -60,7 +75,8 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 
 		if st.DisplayError {
 			pages.ShowPage(ERROR_PAGE_NAME)
-			focusPrimitive = errorModal
+			app.SetFocus(errorModal)
+			return
 		} else {
 			pages.HidePage(ERROR_PAGE_NAME)
 		}
@@ -73,14 +89,18 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 		}
 
 		if st.DisplayFilterInput {
-			layout.AddItem(filterInput, 1, 0, true)
+			if layout.GetItemCount() == 2 {
+				layout.AddItem(filterInput, 1, 0, true)
+			}
 			focusPrimitive = filterInput
 		} else {
 			layout.RemoveItem(filterInput)
 		}
 
 		if st.DisplayPatternInput {
-			layout.AddItem(patternInput, 1, 0, true)
+			if layout.GetItemCount() == 2 {
+				layout.AddItem(patternInput, 1, 0, true)
+			}
 			focusPrimitive = patternInput
 		} else {
 			layout.RemoveItem(patternInput)
@@ -97,14 +117,9 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 		actions.ActionNameHideFilterInput,
 		actions.ActionNameFilter, // Can display errors
 		actions.ActionNameDisplayPatternInput,
-		actions.ActionNameSetPattern,   // Can display errors
-		actions.ActionNameToggleFilter, // Can display errors
-	})
-
-	stateStore.AfterUpdate(func(s gredux.State) {
-		// The components should have set their state correctly using Hooks
-		// now lets render the app
-		//app.QueueUpdateDraw(func() {})
+		actions.ActionNameSetPattern,            // Can display errors
+		actions.ActionNameToggleFilter,          // Can display errors
+		actions.ActionNameToggleNonPatternLines, // Can display errors
 	})
 
 	app.SetRoot(pages, true)
