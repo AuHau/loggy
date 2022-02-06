@@ -1,8 +1,11 @@
 GO ?= go
 GOBIN ?= $$($(GO) env GOPATH)/bin
+LDFLAGS ?= -s -w \
+-X github.com/auhau/loggy/ui.Version="0.2.0" \
+
 
 .PHONY: all
-all: build vet test binary
+all: clean build vet test binary
 
 .PHONY: binary
 binary: CGO_ENABLED=0

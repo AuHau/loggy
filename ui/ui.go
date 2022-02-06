@@ -10,11 +10,10 @@ import (
 
 // Key bindings
 const (
-	SET_FILTER_KEY               = '/'
-	TOGGLE_FILTER_KEY            = 'f'
-	TOGGLE_NON_PATTERN_LINES_KEY = 'a'
-	SET_PATTERN_KEY              = 'p'
-	HELP_KEY                     = 'h'
+	SET_FILTER_KEY    = '/'
+	TOGGLE_FILTER_KEY = 'f'
+	SET_PATTERN_KEY   = 'p'
+	HELP_KEY          = 'h'
 )
 
 // Pages names
@@ -26,6 +25,8 @@ const (
 
 // Color theme
 const (
+	NON_PATTERN_MATCHING_LINES_FORMAT = "[crimson:-:-]"
+
 	STATUS_BAR_BACKGROUND_COLOR = tcell.ColorGray
 
 	NON_PATTERN_LINES_STATUS_BACKGROUND_COLOR = tcell.ColorDarkRed
@@ -117,9 +118,8 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 		actions.ActionNameHideFilterInput,
 		actions.ActionNameFilter, // Can display errors
 		actions.ActionNameDisplayPatternInput,
-		actions.ActionNameSetPattern,            // Can display errors
-		actions.ActionNameToggleFilter,          // Can display errors
-		actions.ActionNameToggleNonPatternLines, // Can display errors
+		actions.ActionNameSetPattern,   // Can display errors
+		actions.ActionNameToggleFilter, // Can display errors
 	})
 
 	app.SetRoot(pages, true)

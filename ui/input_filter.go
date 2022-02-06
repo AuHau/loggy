@@ -26,33 +26,25 @@ func filterInputReducer(s gredux.State, action gredux.Action) gredux.State {
 		st.DisplayFilterInput = false
 		return st
 
-	case actions.ActionNameToggleNonPatternLines:
-		// No filter is set, so we don't have to bother with changing anything
-		if st.FilterString == "" {
-			return st
-		}
-
-		_, _, _, logs, err := store.Filter(st.FilterExpression, st.ParsingPattern, st.DisplayNonPatternLines)
-
-		if err != nil {
-			st.DisplayError = true
-			st.ErrorMessage = fmt.Sprint(err)
-			return st
-		}
-
-		st.DisplayNonPatternLines = !st.DisplayNonPatternLines
-		st.Logs = logs
-		return st
-
 	case actions.ActionNameFilter:
-		filterExpression, err := govaluate.NewEvaluableExpression(action.Data.(string))
-		if err != nil {
-			st.DisplayError = true
-			st.ErrorMessage = fmt.Sprint(err)
-			return st
+		var (
+			filterExpression *govaluate.EvaluableExpression
+			err              error
+			filterString     = action.Data.(string)
+		)
+
+		if filterString == "" {
+			filterExpression = nil
+		} else {
+			filterExpression, err = govaluate.NewEvaluableExpression(filterString)
+			if err != nil {
+				st.DisplayError = true
+				st.ErrorMessage = fmt.Sprint(err)
+				return st
+			}
 		}
 
-		totalLines, matchingLines, nonPatternLines, logs, err := store.Filter(filterExpression, st.ParsingPattern, st.DisplayNonPatternLines)
+		totalLines, matchingLines, nonPatternLines, logs, err := store.Filter(filterExpression, st.ParsingPattern, makeNonPatternMatchedDecorator())
 		if err != nil {
 			st.DisplayError = true
 			st.ErrorMessage = fmt.Sprint(err)
@@ -64,7 +56,7 @@ func filterInputReducer(s gredux.State, action gredux.Action) gredux.State {
 		st.TotalLines = totalLines
 		st.MatchingLines = matchingLines
 		st.NonPatternLines = nonPatternLines
-		st.IsFilterOn = true
+		st.IsFilterOn = filterString != ""
 		st.DisplayFilterInput = false
 		st.FilterString = action.Data.(string)
 
@@ -82,9 +74,9 @@ func filterInputReducer(s gredux.State, action gredux.Action) gredux.State {
 		)
 
 		if st.IsFilterOn { // Filter is On, so we are turning it off so displaying all logs
-			_, _, _, logs, err = store.Filter(nil, st.ParsingPattern, st.DisplayNonPatternLines)
+			_, _, _, logs, err = store.Filter(nil, st.ParsingPattern, makeNonPatternMatchedDecorator())
 		} else { // Filter is Off, so we are turning it on so displaying filtered logs, the number of lines shouldn't have changed.
-			_, _, _, logs, err = store.Filter(st.FilterExpression, st.ParsingPattern, st.DisplayNonPatternLines)
+			_, _, _, logs, err = store.Filter(st.FilterExpression, st.ParsingPattern, makeNonPatternMatchedDecorator())
 		}
 
 		if err != nil {
