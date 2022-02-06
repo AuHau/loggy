@@ -11,6 +11,7 @@ const (
 	ActionNameFilter                = "filter"
 	ActionNameToggleFilter          = "toggleFilter"
 	ActionNameDisplayPatternInput   = "displayPatternInput"
+	ActionNameHidePatternInput      = "hidePatternInput"
 	ActionNameToggleNonPatternLines = "toggleNonPatternLines"
 	ActionNameSetPattern            = "setPattern"
 	ActionNameTurnOnFollowing       = "turnOnFollowing"
@@ -45,6 +46,9 @@ func ToggleFilter() gredux.Action {
 
 func DisplayPatternInput() gredux.Action {
 	return gredux.Action{ID: ActionNameDisplayPatternInput, Data: nil}
+}
+func HidePatternInput() gredux.Action {
+	return gredux.Action{ID: ActionNameHidePatternInput, Data: nil}
 }
 func ToggleNonPatternLines() gredux.Action {
 	return gredux.Action{ID: ActionNameToggleNonPatternLines, Data: nil}
