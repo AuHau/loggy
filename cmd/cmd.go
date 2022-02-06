@@ -20,7 +20,6 @@ const (
 	BUFFER_SIZE_NAME        = "buffer-size"
 	PARSE_PATTERN_NAME      = "pattern"
 	PARSE_PATTERN_NAME_NAME = "pattern-name"
-	SHOW_NON_PATTERN_LINES  = "non-pattern-lines"
 	FOLLOW_NAME             = "follow"
 )
 
@@ -113,14 +112,13 @@ var cmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		initialState := state.State{
-			IsFollowing:            viper.GetBool(FOLLOW_NAME),
-			IsFilterOn:             false,
-			FilterString:           "",
-			ParsingPatternString:   pattern,
-			ParsingPattern:         parsingPatternInstance,
-			DisplayNonPatternLines: viper.GetBool(SHOW_NON_PATTERN_LINES),
-			InputName:              inputName,
-			IsLogsFirstLine:        true,
+			IsFollowing:          viper.GetBool(FOLLOW_NAME),
+			IsFilterOn:           false,
+			FilterString:         "",
+			ParsingPatternString: pattern,
+			ParsingPattern:       parsingPatternInstance,
+			InputName:            inputName,
+			IsLogsFirstLine:      true,
 		}
 
 		stateStore := gredux.New(initialState)
@@ -155,7 +153,6 @@ func init() {
 	cmd.Flags().StringP(PARSE_PATTERN_NAME, "p", "", "parsing pattern see above for details")
 	cmd.Flags().StringP(PARSE_PATTERN_NAME_NAME, "n", "", "use predefined pattern in config")
 	cmd.Flags().BoolP(FOLLOW_NAME, "f", false, "turn on following mode which always show latest logs")
-	cmd.Flags().BoolP(SHOW_NON_PATTERN_LINES, "a", true, "display lines that do not match parsing pattern")
 }
 
 // initConfig reads in config file and ENV variables if set.

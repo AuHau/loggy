@@ -50,7 +50,7 @@ func patternInputReducer(s gredux.State, action gredux.Action) gredux.State {
 			return st
 		}
 
-		totalLines, matchingLines, nonPatternLines, logs, err := store.Filter(st.FilterExpression, pattern, st.DisplayNonPatternLines)
+		totalLines, matchingLines, nonPatternLines, logs, err := store.Filter(st.FilterExpression, pattern, makeNonPatternMatchedDecorator())
 		if err != nil {
 			st.DisplayError = true
 			st.ErrorMessage = fmt.Sprint(err)
@@ -64,18 +64,6 @@ func patternInputReducer(s gredux.State, action gredux.Action) gredux.State {
 		st.ParsingPattern = pattern
 		st.ParsingPatternString = action.Data.(string)
 		st.DisplayPatternInput = false
-		return st
-	case actions.ActionNameToggleNonPatternLines:
-		// Toggling NonPatternLines displaying should not change any lines count only print out new lines as well
-		_, _, _, logs, err := store.Filter(st.FilterExpression, st.ParsingPattern, !st.DisplayNonPatternLines)
-		if err != nil {
-			st.DisplayError = true
-			st.ErrorMessage = fmt.Sprint(err)
-			return st
-		}
-
-		st.Logs = logs
-		st.DisplayNonPatternLines = !st.DisplayNonPatternLines
 		return st
 	}
 

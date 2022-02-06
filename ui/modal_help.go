@@ -5,6 +5,7 @@ import (
 	"github.com/auhau/gredux"
 	"github.com/auhau/loggy/state"
 	"github.com/auhau/loggy/state/actions"
+	"github.com/auhau/loggy/store"
 	"github.com/rivo/tview"
 )
 import "github.com/chonla/format"
@@ -20,7 +21,14 @@ var KEY_MAP = map[string]interface{}{
 	"version":      Version,
 }
 
-var HelpHomeText = format.Sprintf(`General keys:
+var HelpHomeText = format.Sprintf(`
+Status bar on top displays several helpful information. Describing from left to right:
+ - Input name
+ - Optional "F" indicator that shows if loggy is following the end of the logs
+ - Filter status that displays "<number of filter matching lines>/<number of total lines>". If it has green background than filter is applied otherwise is turned off or not set.
+ - Optional number of lines that were not possible to match against the parsing pattern.s
+
+Main key shortcuts:
  - "%<filter>s" for setting filter
  - "%<toggleFilter>s" for toggling filter
  - "%<pattern>s" for setting parsing pattern input
@@ -47,7 +55,9 @@ var HelpInputsText = `Input fields:
  - Ctrl-W: Delete the last word before the cursor.
  - Ctrl-U: Delete the entire line.`
 
-var HelpParsingPatternText = `The logs are parsed using parsing pattern that you have to configure in order to use filters. The lines are tokenized using space character so you have to define section of the line. Internally regex is used for parsing, but the input pattern is escaped by default for special characters so you don't have to worry about that. You define parameters using syntax "<name:type>", where name is the name of parameter that you can refer to in filters and type is predefined type used to correctly find and parse the parameter.
+var HelpParsingPatternText = fmt.Sprintf(`The logs are parsed using parsing pattern that you have to configure in order to use filters. The lines are tokenized using space character so you have to define section of the line. Internally regex is used for parsing, but the input pattern is escaped by default for special characters so you don't have to worry about that. You define parameters using syntax "<name:type>", where name is the name of parameter that you can refer to in filters and type is predefined type used to correctly find and parse the parameter.
+
+There is built-in bool parameter called "%s" reserved for marking log lines that were or were not possible to match against the parsing pattern. So you can use that to debug your parsing pattern with expressions like "!%[1]s"
 
 Supported types:
  - "string" defines string containing non-whitespace characters: [^\s]+
@@ -56,7 +66,7 @@ Supported types:
 
 Example log and bellow its parsing pattern:
 [2022-09-11T15:04:22](authorization) DEBUG 200 We have received login information
-[<timestamp:string>](<component:string>) <level:string> <code:integer> <message:rest>`
+[<timestamp:string>](<component:string>) <level:string> <code:integer> <message:rest>`, store.PATTERN_MATCHING_PARAMETER_NAME)
 
 var HelpFilterText = `In order to use filter for the logs you have to define parsing pattern in which you define parameters that are extracted from the log lines. Then you can write filter expressions that will be applied on the logs. Filter has to return bool otherwise error will be shown.
 

@@ -23,70 +23,56 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 	case actions.ActionNameAddLogLine:
 		line := action.Data.(string)
 		var lineWithNL string
+		nonPatternMatchingDecorator := makeNonPatternMatchedDecorator()
 
-		if st.IsLogsFirstLine {
-			lineWithNL = line
-			st.IsLogsFirstLine = false
-		} else {
-			lineWithNL += "\n" + line
-		}
-
-		result, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
+		filterMatched, patternMatched, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
 		if err != nil {
 			st.DisplayError = true
 			st.ErrorMessage = fmt.Sprint(err)
 			return st
 		}
+		st.TotalLines += 1
 
-		if st.FilterString != "" {
-			if result == store.MATCH {
-				st.TotalLines += 1
-				st.MatchingLines += 1
-				st.Logs += lineWithNL
-			} else if result == store.FILTER_NO_MATCH {
-				st.TotalLines += 1
-			} else if result == store.PARSE_PATTERN_NO_MATCH {
-				if st.DisplayNonPatternLines {
-					st.Logs += lineWithNL
-				}
-				st.TotalLines += 1
-				st.NonPatternLines += 1
+		if filterMatched {
+			if st.IsLogsFirstLine {
+				lineWithNL = line
+				st.IsLogsFirstLine = false
+			} else {
+				lineWithNL += "\n" + line
 			}
-		} else {
-			st.TotalLines += 1
+
+			if !patternMatched {
+				lineWithNL = nonPatternMatchingDecorator(lineWithNL)
+			}
+
 			st.MatchingLines += 1
-
-			if result == store.PARSE_PATTERN_NO_MATCH {
-				st.NonPatternLines += 1
-			}
-
 			st.Logs += lineWithNL
 		}
+
+		if !patternMatched {
+			st.NonPatternLines += 1
+		}
+
 		return st
 	case actions.ActionNameDropLogLine:
 		line := action.Data.(string)
-		// We gonna check if the line matches filter only there is some filter set
-		if st.FilterString != "" {
-			result, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
-			if err != nil {
-				st.DisplayError = true
-				st.ErrorMessage = fmt.Sprint(err)
-				return st
-			}
 
-			if result == store.MATCH {
-				st.TotalLines -= 1
-				st.MatchingLines -= 1
-			} else if result == store.FILTER_NO_MATCH {
-				st.TotalLines -= 1
-			} else if result == store.PARSE_PATTERN_NO_MATCH {
-				st.TotalLines -= 1
-				st.NonPatternLines -= 1
-			}
-		} else {
-			st.TotalLines -= 1
+		filterMatched, patternMatched, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
+		if err != nil {
+			st.DisplayError = true
+			st.ErrorMessage = fmt.Sprint(err)
+			return st
+		}
+		st.TotalLines -= 1
+
+		if filterMatched {
 			st.MatchingLines -= 1
 		}
+
+		if !patternMatched {
+			st.NonPatternLines -= 1
+		}
+
 		return st
 	}
 
@@ -116,8 +102,6 @@ func makeLogsView(bufferSize int, stateStore *gredux.Store) *tview.TextView {
 				stateStore.Dispatch(actions.ToggleFilter())
 			case SET_FILTER_KEY:
 				stateStore.Dispatch(actions.DisplayFilterInput())
-			case TOGGLE_NON_PATTERN_LINES_KEY:
-				stateStore.Dispatch(actions.ToggleNonPatternLines())
 			case SET_PATTERN_KEY:
 				stateStore.Dispatch(actions.DisplayPatternInput())
 			case HELP_KEY:
@@ -144,7 +128,6 @@ func makeLogsView(bufferSize int, stateStore *gredux.Store) *tview.TextView {
 	}, []string{
 		actions.ActionNameFilter,
 		actions.ActionNameToggleFilter,
-		actions.ActionNameToggleNonPatternLines,
 		actions.ActionNameSetPattern,
 		actions.ActionNameAddLogLine,
 	})

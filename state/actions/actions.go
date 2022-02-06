@@ -3,21 +3,20 @@ package actions
 import "github.com/auhau/gredux"
 
 const (
-	ActionNameHideError             = "hideError"
-	ActionNameDisplayHelp           = "displayHelp"
-	ActionNameHideHelp              = "hideHelp"
-	ActionNameDisplayFilterInput    = "displayFilterInput"
-	ActionNameHideFilterInput       = "hideFilterInput"
-	ActionNameFilter                = "filter"
-	ActionNameToggleFilter          = "toggleFilter"
-	ActionNameDisplayPatternInput   = "displayPatternInput"
-	ActionNameHidePatternInput      = "hidePatternInput"
-	ActionNameToggleNonPatternLines = "toggleNonPatternLines"
-	ActionNameSetPattern            = "setPattern"
-	ActionNameTurnOnFollowing       = "turnOnFollowing"
-	ActionNameTurnOffFollowing      = "turnOffFollowing"
-	ActionNameDropLogLine           = "dropLogLine"
-	ActionNameAddLogLine            = "addLogLine"
+	ActionNameHideError           = "hideError"
+	ActionNameDisplayHelp         = "displayHelp"
+	ActionNameHideHelp            = "hideHelp"
+	ActionNameDisplayFilterInput  = "displayFilterInput"
+	ActionNameHideFilterInput     = "hideFilterInput"
+	ActionNameFilter              = "filter"
+	ActionNameToggleFilter        = "toggleFilter"
+	ActionNameDisplayPatternInput = "displayPatternInput"
+	ActionNameHidePatternInput    = "hidePatternInput"
+	ActionNameSetPattern          = "setPattern"
+	ActionNameTurnOnFollowing     = "turnOnFollowing"
+	ActionNameTurnOffFollowing    = "turnOffFollowing"
+	ActionNameDropLogLine         = "dropLogLine"
+	ActionNameAddLogLine          = "addLogLine"
 )
 
 func HideError() gredux.Action {
@@ -49,9 +48,6 @@ func DisplayPatternInput() gredux.Action {
 }
 func HidePatternInput() gredux.Action {
 	return gredux.Action{ID: ActionNameHidePatternInput, Data: nil}
-}
-func ToggleNonPatternLines() gredux.Action {
-	return gredux.Action{ID: ActionNameToggleNonPatternLines, Data: nil}
 }
 func SetPattern(pattern string) gredux.Action {
 	return gredux.Action{ID: ActionNameSetPattern, Data: pattern}

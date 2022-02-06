@@ -7,10 +7,9 @@ import (
 
 type State struct {
 	// Logs view
-	IsFollowing            bool
-	IsFilterOn             bool
-	DisplayNonPatternLines bool
-	InputName              string
+	IsFollowing bool
+	IsFilterOn  bool
+	InputName   string
 
 	IsLogsFirstLine bool
 	Logs            string
