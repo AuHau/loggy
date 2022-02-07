@@ -1,5 +1,6 @@
 # loggy
----
+
+![loggy2](https://user-images.githubusercontent.com/6072250/152873422-e0b4b8ac-a385-43c5-94b7-c818e4b88267.gif)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/auhau/loggy)](https://goreportcard.com/report/github.com/auhau/loggy)
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fauhau%2Floggy%2Fbadge&style=flat&label=build)](https://actions-badge.atrox.dev/auhau/loggy/goto)
@@ -52,7 +53,9 @@ from [latest release](https://github.com/auhau/loggy/releases/latest) page.
 See `loggy --help` for this usage:
 
 ```
-By default loggy reads from STDIN or you can specify file path to read the logs from specific file.
+y default loggy reads from STDIN or you can specify file path to read the logs from specific file.
+
+You quit the application by pressing Ctrl+C.
 
 Configuration
 -------------
@@ -147,12 +150,13 @@ Usage:
   loggy [path to log file] [flags]
 
 Flags:
-  -b, --buffer-size int       number of lines that will be buffered (default 10000)
-      --config string         config file (default is $HOME/.loggy.yaml)
-  -f, --follow                turn on following mode which always show latest logs
-  -h, --help                  help for loggy
-  -p, --pattern string        parsing pattern see above for details
-  -n, --pattern-name string   use predefined pattern in config
+  -b, --buffer-size int        number of lines that will be buffered (default 10000)
+      --config string          config file (default is $HOME/.loggy.yaml)
+  -r, --disable-regex-escape   turn off pattern regex escaping
+  -f, --follow                 turn on following mode which always show latest logs
+  -h, --help                   help for loggy
+  -p, --pattern string         parsing pattern see above for details
+  -n, --pattern-name string    use predefined pattern in config
 ```
 
 ## Contribute
