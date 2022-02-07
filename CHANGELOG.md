@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://www.github.com/AuHau/loggy/compare/v0.2.0...v0.3.0) (2022-02-07)
+
+
+### Features
+
+* allow regex patterns ([#29](https://www.github.com/AuHau/loggy/issues/29)) ([68ac391](https://www.github.com/AuHau/loggy/commit/68ac391069e051d8f7b957c0fb1f86c67e249a90))
+
+
+### Bug Fixes
+
+* app clean up ([#27](https://www.github.com/AuHau/loggy/issues/27)) ([ff92659](https://www.github.com/AuHau/loggy/commit/ff926590c848b9d3634d6609306f5d7dcdbd4797))
+* when pattern is not set ignore non matched lines ([#26](https://www.github.com/AuHau/loggy/issues/26)) ([acb4084](https://www.github.com/AuHau/loggy/commit/acb40844768cdeb3ea84cc97805f0a3b66464072))
+
 ## [0.2.0](https://www.github.com/AuHau/loggy/compare/v0.1.1...v0.2.0) (2022-02-07)
 
 
