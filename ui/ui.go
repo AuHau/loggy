@@ -118,6 +118,7 @@ func Bootstrap(stateStore *gredux.Store, bufferSize int) (*tview.Application, er
 		actions.ActionNameHideFilterInput,
 		actions.ActionNameFilter, // Can display errors
 		actions.ActionNameDisplayPatternInput,
+		actions.ActionNameHidePatternInput,
 		actions.ActionNameSetPattern,   // Can display errors
 		actions.ActionNameToggleFilter, // Can display errors
 	})
