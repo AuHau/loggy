@@ -1,5 +1,7 @@
 # loggy
----
+
+![loggy2](https://user-images.githubusercontent.com/6072250/152873422-e0b4b8ac-a385-43c5-94b7-c818e4b88267.gif)
+
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/auhau/loggy)](https://goreportcard.com/report/github.com/auhau/loggy)
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fauhau%2Floggy%2Fbadge&style=flat&label=build)](https://actions-badge.atrox.dev/auhau/loggy/goto)
