@@ -1,10 +1,12 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/auhau/allot"
+	"strconv"
 	"strings"
 )
 
@@ -75,7 +77,13 @@ func buildParameters(match allot.MatchInterface, pattern allot.Command) (map[str
 			if match != nil {
 				value, err := match.Integer(parameter.Name())
 				if err != nil {
-					return nil, err
+					// The parameter was not present in the line and hence atoi() fails because it
+					// tries to convert empty string. So we gonna default to 0.
+					if errors.Is(err, strconv.ErrSyntax) {
+						parameters[parameter.Name()] = 0
+					} else {
+						return nil, err
+					}
 				}
 
 				parameters[parameter.Name()] = value
@@ -112,10 +120,11 @@ func IsLineMatching(line string, filter *vm.Program, pattern allot.Command) (fil
 	// We did not match the line against the parsing pattern so not expected parameters are available
 	// but we will expose this information as parameter itself to the user.
 	parameters, err = buildParameters(match, pattern)
-	parameters[PATTERN_MATCHING_PARAMETER_NAME] = matchError == nil
 	if err != nil {
 		return false, false, err
 	}
+
+	parameters[PATTERN_MATCHING_PARAMETER_NAME] = matchError == nil
 
 	result, err := expr.Run(filter, parameters)
 	if err != nil {

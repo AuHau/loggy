@@ -19,6 +19,7 @@ const (
 	PARSE_PATTERN_NAME      = "pattern"
 	PARSE_PATTERN_NAME_NAME = "pattern-name"
 	FOLLOW_NAME             = "follow"
+	DISABLE_REGEX_ESCAPE    = "disable-regex-escape"
 )
 
 // Default values
@@ -60,7 +61,6 @@ Keyboard shortcuts
 
 var cfgFile string
 
-// TODO: Add option to turn off Regex escaping
 // TODO: Add option to set filter
 // TODO: Add option to save the logs into file (as the logs are discarded when exceeding buffer size)
 // TODO: Allow "infinite" buffer size?
@@ -112,13 +112,14 @@ var cmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		initialState := state.State{
-			IsFollowing:          viper.GetBool(FOLLOW_NAME),
-			IsFilterOn:           false,
-			FilterString:         "",
-			ParsingPatternString: pattern,
-			ParsingPattern:       parsingPatternInstance,
-			InputName:            inputName,
-			IsLogsFirstLine:      true,
+			IsFollowing:                viper.GetBool(FOLLOW_NAME),
+			ShouldEscapeParsingPattern: !viper.GetBool(DISABLE_REGEX_ESCAPE),
+			IsFilterOn:                 false,
+			FilterString:               "",
+			ParsingPatternString:       pattern,
+			ParsingPattern:             parsingPatternInstance,
+			InputName:                  inputName,
+			IsLogsFirstLine:            true,
 		}
 
 		stateStore := gredux.New(initialState)
@@ -161,6 +162,7 @@ func init() {
 	cmd.Flags().StringP(PARSE_PATTERN_NAME, "p", "", "parsing pattern see above for details")
 	cmd.Flags().StringP(PARSE_PATTERN_NAME_NAME, "n", "", "use predefined pattern in config")
 	cmd.Flags().BoolP(FOLLOW_NAME, "f", false, "turn on following mode which always show latest logs")
+	cmd.Flags().BoolP(DISABLE_REGEX_ESCAPE, "r", false, "turn off pattern regex escaping")
 }
 
 // initConfig reads in config file and ENV variables if set.
