@@ -7,11 +7,9 @@ import (
 	"github.com/auhau/loggy/state"
 	"github.com/auhau/loggy/store"
 	"github.com/auhau/loggy/ui"
-	"io"
-	"os"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 // Option names
@@ -29,6 +27,8 @@ const (
 )
 
 var LONG_DESCRIPTION = fmt.Sprintf(`By default loggy reads from STDIN or you can specify file path to read the logs from specific file.
+
+You quit the application by pressing Ctrl+C.
 
 Configuration
 -------------
@@ -75,7 +75,7 @@ var cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
 			inputName   string
-			inputStream io.Reader
+			inputStream *os.File
 			err         error
 		)
 
@@ -128,8 +128,16 @@ var cmd = &cobra.Command{
 
 		go store.StartBuffering(inputStream, uiApp, stateStore, bufferSize)
 
+		// App runs until CtrlC is pressed which terminates the UI and continue the execution bellow.
+		// The tview capture the key press so SIGINT is not properly raised so not using it here.
 		err = uiApp.Run()
 		cobra.CheckErr(err)
+
+		// Clean up
+		err = inputStream.Close()
+		cobra.CheckErr(err)
+
+		os.Exit(0)
 	},
 }
 
