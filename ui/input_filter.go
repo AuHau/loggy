@@ -2,7 +2,8 @@ package ui
 
 import (
 	"fmt"
-	"github.com/Knetic/govaluate"
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 	"github.com/auhau/gredux"
 	"github.com/auhau/loggy/state"
 	"github.com/auhau/loggy/state/actions"
@@ -28,7 +29,7 @@ func filterInputReducer(s gredux.State, action gredux.Action) gredux.State {
 
 	case actions.ActionNameFilter:
 		var (
-			filterExpression *govaluate.EvaluableExpression
+			filterExpression *vm.Program
 			err              error
 			filterString     = action.Data.(string)
 		)
@@ -36,7 +37,7 @@ func filterInputReducer(s gredux.State, action gredux.Action) gredux.State {
 		if filterString == "" {
 			filterExpression = nil
 		} else {
-			filterExpression, err = govaluate.NewEvaluableExpression(filterString)
+			filterExpression, err = expr.Compile(filterString, expr.AsBool())
 			if err != nil {
 				st.DisplayError = true
 				st.ErrorMessage = fmt.Sprint(err)

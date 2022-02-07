@@ -3,7 +3,7 @@ module github.com/auhau/loggy
 go 1.17
 
 require (
-	github.com/Knetic/govaluate v3.0.0+incompatible
+	github.com/antonmedv/expr v1.9.0
 	github.com/auhau/allot v0.0.0-20220131141522-754325320dd5
 	github.com/auhau/gredux v0.0.0-20220204125146-c2f415ee87de
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
