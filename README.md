@@ -53,8 +53,10 @@ from [latest release](https://github.com/auhau/loggy/releases/latest) page.
 See `loggy --help` for this usage:
 
 ```
-y default loggy reads from STDIN or you can specify file path to read the logs from specific file.
+Loggy is a swiss knife for working with logs. 
+It stores the logs in internal buffer which allows it to do all sort of operations on top of them without the need to rerun the log's producing program or store them in file.
 
+By default loggy reads from STDIN or you can specify file path to read the logs from specific file. 
 You quit the application by pressing Ctrl+C.
 
 Configuration
@@ -66,7 +68,7 @@ The order of precedence is: $HOME config > CWD config > --config config > Env. v
 
 Parsing pattern
 ---------------
-The logs are parsed using parsing pattern that you have to configure in order to use filters. The lines are tokenized using space character. Internally regex is used for parsing, but the input pattern is escaped by default for special characters so you don't have to worry about special characters. You define parameters using syntax "<name:type>", where name is the name of parameter that you can refer to in filters and type is predefined type used to correctly find and parse the parameter.
+The logs are parsed using parsing pattern that you have to configure in order to use filters. Internally regex is used for parsing. By default the input pattern is escaped for special characters, but if you need to do some advance parsing then you can disable the escaping using -r/--disable-regex-escape flag. You define parameters using syntax "<name:type>", where name is the name of parameter that you can refer to in filters and type is predefined type used to correctly find and parse the parameter. You can omit "type" in which case the "string" type will be used.
 
 Lines that were not possible to parsed are colored with red color. Moreover counter of how many lines were not possible to parse is displayed in the status bar on the right end of it. It is only present if there are some lines that were not possible to parse.  
 
