@@ -1,11 +1,10 @@
 package store
 
 import (
-	"errors"
 	"fmt"
-	"github.com/Knetic/govaluate"
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 	"github.com/auhau/allot"
-	"reflect"
 	"strings"
 )
 
@@ -13,7 +12,7 @@ const PATTERN_MATCHING_PARAMETER_NAME = "patternMatches"
 
 // Filter goes through buffer and writes out logs that match
 // It assumes that display was cleared out
-func Filter(filter *govaluate.EvaluableExpression, pattern allot.Command, nonPatternMatchingDecorator func(string) string) (totalLines, matchingLines, nonPatternLines int, logs string, err error) {
+func Filter(filter *vm.Program, pattern allot.Command, nonPatternMatchingDecorator func(string) string) (totalLines, matchingLines, nonPatternLines int, logs string, err error) {
 	mu.Lock()
 	defer mu.Unlock()
 	builder := strings.Builder{}
@@ -93,7 +92,7 @@ func buildParameters(match allot.MatchInterface, pattern allot.Command) (map[str
 
 // IsLineMatching check if for given filter and pattern the line matches.
 // It returns enum values FILTER_MATCH, PARSE_PATTERN_NO_MATCH or FILTER_NO_MATCH according it matching result
-func IsLineMatching(line string, filter *govaluate.EvaluableExpression, pattern allot.Command) (filterMatched bool, patternMatched bool, err error) {
+func IsLineMatching(line string, filter *vm.Program, pattern allot.Command) (filterMatched bool, patternMatched bool, err error) {
 	match, matchError := pattern.Match(line)
 
 	// if no filter is configured than we don't have to do filterExpression evaluation
@@ -118,13 +117,9 @@ func IsLineMatching(line string, filter *govaluate.EvaluableExpression, pattern 
 		return false, false, err
 	}
 
-	result, err := filter.Evaluate(parameters)
+	result, err := expr.Run(filter, parameters)
 	if err != nil {
 		return false, false, err
-	}
-
-	if reflect.TypeOf(result).String() != "bool" {
-		return false, false, errors.New("filter expression did not return boolean")
 	}
 
 	if result.(bool) {

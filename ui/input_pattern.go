@@ -29,6 +29,12 @@ func makeParsingPattern(pattern string) (parsingPatternInstance allot.Command, e
 		return parsingPatternInstance, fmt.Errorf("invalid syntax of parsing pattern: %s", err)
 	}
 
+	for _, parameter := range parsingPatternInstance.Parameters() {
+		if parameter.Name() == store.PATTERN_MATCHING_PARAMETER_NAME {
+			return parsingPatternInstance, fmt.Errorf("parsing pattern contains reserved pattern name '%s'", store.PATTERN_MATCHING_PARAMETER_NAME)
+		}
+	}
+
 	return parsingPatternInstance, nil
 }
 

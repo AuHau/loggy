@@ -1,7 +1,7 @@
 package state
 
 import (
-	"github.com/Knetic/govaluate"
+	"github.com/antonmedv/expr/vm"
 	"github.com/auhau/allot"
 )
 
@@ -26,7 +26,7 @@ type State struct {
 
 	// InputFilter
 	FilterString       string
-	FilterExpression   *govaluate.EvaluableExpression
+	FilterExpression   *vm.Program
 	DisplayFilterInput bool
 
 	// PatternFilter
