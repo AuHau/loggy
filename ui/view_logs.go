@@ -22,8 +22,19 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 		return st
 	case actions.ActionNameAddLogLine:
 		line := action.Data.(string)
-		var lineWithNL string
-		nonPatternMatchingDecorator := makeNonPatternMatchedDecorator()
+		var (
+			lineWithNL                  string
+			nonPatternMatchingDecorator func(string) string
+		)
+
+		// If pattern is not even set, we won't be coloring the logs
+		if st.ParsingPatternString == "" {
+			nonPatternMatchingDecorator = func(s string) string {
+				return s
+			}
+		} else {
+			nonPatternMatchingDecorator = makeNonPatternMatchedDecorator()
+		}
 
 		filterMatched, patternMatched, err := store.IsLineMatching(line, st.FilterExpression, st.ParsingPattern)
 		if err != nil {
@@ -49,7 +60,8 @@ func logsViewReducer(s gredux.State, action gredux.Action) gredux.State {
 			st.Logs += lineWithNL
 		}
 
-		if !patternMatched {
+		// We are not counting lines if parsing pattern is not set
+		if !patternMatched && st.ParsingPatternString != "" {
 			st.NonPatternLines += 1
 		}
 
