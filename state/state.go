@@ -30,7 +30,8 @@ type State struct {
 	DisplayFilterInput bool
 
 	// PatternFilter
-	DisplayPatternInput  bool
-	ParsingPatternString string
-	ParsingPattern       allot.Command
+	ShouldEscapeParsingPattern bool
+	DisplayPatternInput        bool
+	ParsingPatternString       string
+	ParsingPattern             allot.Command
 }
