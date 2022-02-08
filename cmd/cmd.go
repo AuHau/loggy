@@ -138,7 +138,8 @@ var cmd = &cobra.Command{
 		err = inputStream.Close()
 		cobra.CheckErr(err)
 
-		os.Exit(0)
+		// Lets kill the whole process group as mitigation of https://github.com/AuHau/loggy/issues/32
+		killGroup()
 	},
 }
 
