@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
-	"syscall"
 )
 
 // Option names
@@ -140,11 +139,7 @@ var cmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		// Lets kill the whole process group as mitigation of https://github.com/AuHau/loggy/issues/32
-		gid, err := syscall.Getpgid(os.Getpid())
-		cobra.CheckErr(err)
-
-		err = syscall.Kill(-gid, syscall.SIGINT)
-		cobra.CheckErr(err)
+		killGroup()
 	},
 }
 
