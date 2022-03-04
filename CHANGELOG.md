@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.3.1](https://www.github.com/AuHau/loggy/compare/v0.3.0...v0.3.1) (2022-02-08)
+
+
+### Bug Fixes
+
+* sigint issuing to process group ([#33](https://www.github.com/AuHau/loggy/issues/33)) ([3af5bba](https://www.github.com/AuHau/loggy/commit/3af5bba89ed4c0ea5290a3f3f947fc78a4f90f9b))
+
 ## [0.3.0](https://www.github.com/AuHau/loggy/compare/v0.2.0...v0.3.0) (2022-02-07)
 
 
